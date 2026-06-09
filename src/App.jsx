@@ -34,7 +34,7 @@ import { buildShippingAddress, validateCheckoutForm } from './utils/formValidati
 
 export default function App() {
 
-  const { cartData, shop } = useCartBridge()
+  const { cartData, shop, cartLoading } = useCartBridge()
 
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
@@ -407,8 +407,18 @@ export default function App() {
 
 
 
-  if (!cartData || configLoading) {
-    return <Loader message={configLoading ? 'Loading checkout settings...' : 'Loading your cart...'} />
+  if (!cartData || cartLoading || configLoading) {
+    return (
+      <Loader
+        message={
+          configLoading
+            ? 'Loading checkout settings...'
+            : cartLoading
+              ? 'Loading your cart...'
+              : 'Loading your cart...'
+        }
+      />
+    )
   }
 
   if (!checkoutSettings.checkoutEnabled) {
