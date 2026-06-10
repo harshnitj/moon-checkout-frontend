@@ -1,7 +1,41 @@
 import { getCodChargeForCart } from './codCharges'
+import { DEFAULT_THEME_COLORS } from './theme'
+import { filterPaymentMethodsByRto } from './rtoRules'
+
+const DEFAULT_MARKETING_SETTINGS = {
+  metaAdsEnabled: false,
+  metaPixelId: '',
+  metaCapiEnabled: false,
+  metaCapiConfigured: false,
+  metaPixelEventInitiateCheckout: true,
+  metaPixelEventAddPaymentInfo: true,
+  metaPixelEventPurchase: true,
+  metaCapiEventInitiateCheckout: true,
+  metaCapiEventAddPaymentInfo: true,
+  metaCapiEventPurchase: true,
+  googleAdsEnabled: false,
+  googleAdsId: '',
+  googleAdsPurchaseLabel: '',
+  googleAdsCheckoutLabel: '',
+  googleCapiEnabled: false,
+  googleCapiConfigured: false,
+  googleMeasurementId: '',
+  googlePixelEventInitiateCheckout: true,
+  googlePixelEventAddPaymentInfo: true,
+  googlePixelEventPurchase: true,
+  googleCapiEventInitiateCheckout: true,
+  googleCapiEventAddPaymentInfo: true,
+  googleCapiEventPurchase: true,
+}
+
+export const CHECKOUT_VARIANTS = {
+  SINGLE_PAGE: 'single-page',
+  THREE_STEP: 'three-step',
+}
 
 export const DEFAULT_CHECKOUT_SETTINGS = {
   checkoutEnabled: true,
+  checkoutVariant: CHECKOUT_VARIANTS.SINGLE_PAGE,
   codEnabled: true,
   onlineEnabled: true,
   advanceEnabled: true,
@@ -37,10 +71,45 @@ export const DEFAULT_CHECKOUT_SETTINGS = {
   landmarkMaxLength: 100,
   codChargeEnabled: false,
   codChargeRules: [],
+  rtoEngineEnabled: false,
+  rtoDefaultBlockMessage: 'This payment method is not available for your order.',
+  razorpayKeyId: null,
+  razorpayConfigured: false,
+  ...DEFAULT_THEME_COLORS,
+  ...DEFAULT_MARKETING_SETTINGS,
+}
+
+function roundRupee(paise) {
+  return Math.round(paise / 100) * 100
 }
 
 export function formatPrice(paise) {
-  return '₹' + (paise / 100).toLocaleString('en-IN')
+  const rupees = Math.round(paise / 100)
+  return '₹' + rupees.toLocaleString('en-IN', { maximumFractionDigits: 0, minimumFractionDigits: 0 })
+}
+
+function hasItemCompareAtPrice(item) {
+  return item.compareAtPrice != null && item.compareAtPrice > 0 && item.compareAtPrice > item.price
+}
+
+function getMrpPricing(cartData) {
+  const sellingTotal = cartData.totalPrice
+  const items = cartData.items || []
+  const hasCompareAtPrice = items.some(hasItemCompareAtPrice)
+
+  if (!hasCompareAtPrice) {
+    return { itemTotal: sellingTotal, saleDiscount: 0 }
+  }
+
+  const mrpTotal = items.reduce((sum, item) => {
+    const unitMrp = hasItemCompareAtPrice(item) ? item.compareAtPrice : item.price
+    return sum + unitMrp * item.quantity
+  }, 0)
+
+  return {
+    itemTotal: mrpTotal,
+    saleDiscount: roundRupee(Math.max(mrpTotal - sellingTotal, 0)),
+  }
 }
 
 export function getPaymentBreakdown(cartData, paymentMethod, settings = DEFAULT_CHECKOUT_SETTINGS) {
@@ -63,20 +132,19 @@ export function getPaymentBreakdown(cartData, paymentMethod, settings = DEFAULT_
     }
   }
 
-  const itemTotal = cartData.originalTotalPrice
-  const saleDiscount = cartData.originalTotalPrice - cartData.totalPrice
   const subtotal = cartData.totalPrice
+  const { itemTotal, saleDiscount } = getMrpPricing(cartData)
 
   const onlineDiscount = paymentMethod === 'online'
     ? Math.min(
-        Math.round(subtotal * (config.onlineDiscountPercent / 100)),
+        roundRupee(subtotal * (config.onlineDiscountPercent / 100)),
         config.onlineDiscountMaxPaise
       )
     : 0
 
   const advanceDiscount = paymentMethod === 'advance'
     ? Math.min(
-        Math.round(subtotal * (config.advanceDiscountPercent / 100)),
+        roundRupee(subtotal * (config.advanceDiscountPercent / 100)),
         config.advanceDiscountMaxPaise
       )
     : 0
@@ -105,18 +173,22 @@ export function getPaymentBreakdown(cartData, paymentMethod, settings = DEFAULT_
   }
 }
 
-export function getAvailablePaymentMethods(cartData, settings = DEFAULT_CHECKOUT_SETTINGS) {
+export function getAvailablePaymentMethods(cartData, settings = DEFAULT_CHECKOUT_SETTINGS, rtoContext = null) {
   const config = { ...DEFAULT_CHECKOUT_SETTINGS, ...settings }
   const subtotal = cartData?.totalPrice || 0
   const methods = []
 
-  if (config.onlineEnabled) methods.push('online')
-  if (config.advanceEnabled) methods.push('advance')
+  const razorpayReady = config.razorpayConfigured
+
+  if (config.onlineEnabled && razorpayReady) methods.push('online')
+  if (config.advanceEnabled && razorpayReady) methods.push('advance')
 
   const codAllowed = config.codEnabled
     && subtotal >= config.codMinCartPaise
     && (config.codMaxCartPaise == null || subtotal <= config.codMaxCartPaise)
 
   if (codAllowed) methods.push('cod')
-  return methods
+
+  if (!rtoContext || !config.rtoEngineEnabled) return methods
+  return filterPaymentMethodsByRto(methods, config, rtoContext)
 }

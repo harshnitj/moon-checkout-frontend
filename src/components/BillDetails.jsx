@@ -66,7 +66,12 @@ export default function BillDetails({ cartData, paymentMethod, settings = DEFAUL
 
       {totalSaving > 0 && (
         <div className="savings-banner">
-          <span className="savings-banner__icon">%</span>
+          <img
+            src="/payment-icons/percentage.svg"
+            alt=""
+            className="savings-banner__icon"
+            aria-hidden="true"
+          />
           <span>Yay! your total discount is {formatPrice(totalSaving)}</span>
         </div>
       )}

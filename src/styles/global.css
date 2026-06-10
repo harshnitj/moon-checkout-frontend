@@ -5,21 +5,42 @@
 }
 
 :root {
-  --green: #008060;
-  --green-light: #e8f7f1;
-  --green-dark: #006e52;
-  --gray-bg: #f5f5f5;
-  --gray-border: #e0e0e0;
-  --gray-text: #757575;
-  --text: #1a1a1a;
-  --white: #ffffff;
-  --red: #e53935;
-  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --bg: #f3f4f8;
+  --surface: #ffffff;
+  --surface-muted: #f8fafc;
+  --border: #e5e7eb;
+  --border-strong: #d1d5db;
+  --text: #111827;
+  --text-muted: #6b7280;
+  --text-soft: #9ca3af;
+  --primary: #2563eb;
+  --primary-soft: #eff6ff;
+  --primary-hover: #1d4ed8;
+  --success: #059669;
+  --success-soft: #ecfdf5;
+  --warning: #d97706;
+  --warning-soft: #fffbeb;
+  --danger: #dc2626;
+  --danger-soft: #fef2f2;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --font: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* Legacy aliases */
+  --green: var(--primary);
+  --green-light: var(--primary-soft);
+  --green-dark: var(--primary-hover);
+  --gray-bg: var(--bg);
+  --gray-border: var(--border);
+  --gray-text: var(--text-muted);
+  --white: var(--surface);
+  --red: var(--danger);
 }
 
 html, body, #root {
   height: 100%;
-  background: var(--white);
+  background: var(--bg);
   font-family: var(--font);
   font-size: 14px;
   color: var(--text);
@@ -35,70 +56,85 @@ button {
   cursor: pointer;
 }
 
-/* Scrollbar thin */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 
-/* Loader */
 .loader {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 14px;
-  color: var(--gray-text);
+  color: var(--text-muted);
 }
 
 .loader--fullscreen {
   min-height: 100vh;
-  background: var(--white);
+  background: var(--bg);
 }
 
 .loader--overlay {
   position: fixed;
   inset: 0;
   z-index: 200;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(243, 244, 248, 0.92);
 }
 
 .loader__spinner {
-  width: 36px;
-  height: 36px;
-  border: 3px solid var(--green-light);
-  border-top-color: var(--green);
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
   border-radius: 50%;
-  animation: loader-spin 0.8s linear infinite;
+  animation: loader-spin 0.75s linear infinite;
+}
+
+.loader__spinner--sm {
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
 }
 
 .loader__message {
   font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+  text-align: center;
+}
+
+.loader__submessage {
+  font-size: 13px;
   font-weight: 500;
-  color: var(--gray-text);
+  color: var(--text-muted);
+  margin: -6px 0 0;
+  text-align: center;
+  max-width: 260px;
+  line-height: 1.45;
 }
 
 @keyframes loader-spin {
   to { transform: rotate(360deg); }
 }
 
-/* Initial HTML loader (replaced when React mounts) */
 #root:empty::before {
   content: '';
   display: block;
-  width: 36px;
-  height: 36px;
-  margin: calc(50vh - 18px) auto 14px;
-  border: 3px solid var(--green-light);
-  border-top-color: var(--green);
+  width: 40px;
+  height: 40px;
+  margin: calc(50vh - 20px) auto 14px;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
   border-radius: 50%;
-  animation: loader-spin 0.8s linear infinite;
+  animation: loader-spin 0.75s linear infinite;
 }
 
 #root:empty::after {
-  content: 'Loading checkout...';
+  content: 'Preparing your cart checkout';
   display: block;
   text-align: center;
   font-size: 14px;
-  font-weight: 500;
-  color: var(--gray-text);
+  font-weight: 600;
+  color: var(--text-muted);
 }

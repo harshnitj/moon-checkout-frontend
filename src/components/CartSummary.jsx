@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react'
-
-function formatPrice(paise) {
-  return '₹' + (paise / 100).toLocaleString('en-IN')
-}
+import { formatPrice } from '../utils/payment'
 
 export default function CartSummary({ cartData }) {
   const [expanded, setExpanded] = useState(() => cartData?.itemCount === 1)

@@ -91,3 +91,119 @@ export function validateCheckoutForm({ email, phone, delivery }, settings = DEFA
 
   return errors
 }
+
+const CONTACT_STEP_FIELDS = ['email', 'phone']
+const ADDRESS_STEP_FIELDS = ['name', 'houseNumber', 'street', 'landmark', 'pincode', 'city', 'state']
+
+function pickErrors(allErrors, keys) {
+  const errors = {}
+  for (const key of keys) {
+    if (allErrors[key]) errors[key] = allErrors[key]
+  }
+  return errors
+}
+
+export function validateContactStep(formValues, settings = DEFAULT_CHECKOUT_SETTINGS) {
+  return pickErrors(validateCheckoutForm(formValues, settings), CONTACT_STEP_FIELDS)
+}
+
+export function validateAddressStep(formValues, settings = DEFAULT_CHECKOUT_SETTINGS) {
+  return pickErrors(validateCheckoutForm(formValues, settings), ADDRESS_STEP_FIELDS)
+}
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+const RED_INVALID_FIELDS = new Set(['email', 'phone', 'pincode'])
+
+function isRedInvalidField(fieldKey) {
+  return RED_INVALID_FIELDS.has(fieldKey)
+}
+
+function hasFieldInput(fieldKey, { email, phone, delivery }) {
+  switch (fieldKey) {
+    case 'email':
+      return !!email.trim()
+    case 'phone':
+      return !!String(phone || '').replace(/\D/g, '')
+    case 'name':
+      return !!delivery.name?.trim()
+    case 'houseNumber':
+      return !!delivery.houseNumber?.trim()
+    case 'street':
+      return !!delivery.street?.trim()
+    case 'landmark':
+      return !!delivery.landmark?.trim()
+    case 'pincode':
+      return !!delivery.pincode?.length
+    case 'city':
+      return !!delivery.city?.trim()
+    case 'state':
+      return !!delivery.state?.trim()
+    default:
+      return false
+  }
+}
+
+export function getFieldStatus(fieldKey, formValues, settings = DEFAULT_CHECKOUT_SETTINGS, fieldError = '') {
+  if (isFieldValid(fieldKey, formValues, settings) && !fieldError) {
+    return 'valid'
+  }
+
+  if (fieldError || hasFieldInput(fieldKey, formValues)) {
+    return isRedInvalidField(fieldKey) ? 'invalid-red' : 'invalid-yellow'
+  }
+
+  return 'neutral'
+}
+
+export function isFieldValid(fieldKey, { email, phone, delivery }, settings = DEFAULT_CHECKOUT_SETTINGS) {
+  const config = { ...DEFAULT_CHECKOUT_SETTINGS, ...settings }
+
+  switch (fieldKey) {
+    case 'email': {
+      if (config.emailEnabled === false) return false
+      const trimmed = email.trim()
+      if (!trimmed) return false
+      return EMAIL_PATTERN.test(trimmed)
+    }
+    case 'phone': {
+      const phoneDigits = String(phone || '').replace(/\D/g, '')
+      if (!phoneDigits || phoneDigits.length !== config.phoneLength) return false
+      if (config.phoneStartDigits && !config.phoneStartDigits.includes(phoneDigits[0])) return false
+      return true
+    }
+    case 'name': {
+      const name = delivery.name?.trim() || ''
+      if (!name) return false
+      return name.length >= config.nameMinLength && name.length <= config.nameMaxLength
+    }
+    case 'houseNumber': {
+      if (!config.houseNumberEnabled) return false
+      const value = delivery.houseNumber?.trim() || ''
+      if (!value) return false
+      return value.length <= config.houseNumberMaxLength
+    }
+    case 'street': {
+      if (!config.streetEnabled) return false
+      const value = delivery.street?.trim() || ''
+      if (!value) return false
+      return value.length <= config.streetMaxLength
+    }
+    case 'landmark': {
+      if (!config.landmarkEnabled) return false
+      const value = delivery.landmark?.trim() || ''
+      if (!value) return false
+      return value.length <= config.landmarkMaxLength
+    }
+    case 'pincode':
+      return delivery.pincode?.length === 6
+        && !!delivery.city?.trim()
+        && !!delivery.state?.trim()
+    case 'city':
+      return !!delivery.city?.trim()
+    case 'state':
+      return !!delivery.state?.trim()
+    default:
+      return false
+  }
+}

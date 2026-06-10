@@ -1,6 +1,16 @@
 import http from './http'
 
-export async function createOrder({ shop, cartData, customer, shippingAddress, paymentMethod, orderTotalPaise, cartSubtotalPaise }) {
+export async function createOrder({
+  shop,
+  cartData,
+  customer,
+  shippingAddress,
+  paymentMethod,
+  orderTotalPaise,
+  cartSubtotalPaise,
+  marketing,
+  funnelSessionId,
+}) {
   const lineItems = cartData.items.map((item) => ({
     variant_id: item.variantId,
     quantity: item.quantity,
@@ -14,6 +24,9 @@ export async function createOrder({ shop, cartData, customer, shippingAddress, p
     paymentMethod,
     orderTotalPaise,
     cartSubtotalPaise,
+    marketing,
+    funnelSessionId,
+    cartData,
   })
 
   return res.data

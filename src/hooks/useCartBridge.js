@@ -13,6 +13,7 @@ function buildStaticCart(shop) {
         variantTitle: 'Free Size',
         quantity: 1,
         price: 99900,
+        compareAtPrice: 199800,
         originalPrice: 199800,
         totalDiscount: 99900,
         image: null,

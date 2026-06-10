@@ -1,6 +1,7 @@
 import React from 'react'
-import { DEFAULT_CHECKOUT_SETTINGS, formatPrice, getPaymentBreakdown } from '../utils/payment'
+import { DEFAULT_CHECKOUT_SETTINGS, formatPrice, getAvailablePaymentMethods, getPaymentBreakdown } from '../utils/payment'
 import { getCodChargeForCart } from '../utils/codCharges'
+import { getRtoNotice } from '../utils/rtoRules'
 
 const PAYMENT_ICONS = [
   { name: 'PhonePe', src: '/payment-icons/phonepe.svg' },
@@ -12,15 +13,23 @@ const PAYMENT_ICONS = [
   { name: 'VISA', src: '/payment-icons/visa.svg' },
 ]
 
-export default function PaymentMethod({ selected, onChange, cartData, settings = DEFAULT_CHECKOUT_SETTINGS }) {
+export default function PaymentMethod({
+  selected,
+  onChange,
+  cartData,
+  settings = DEFAULT_CHECKOUT_SETTINGS,
+  rtoContext = null,
+}) {
   const config = { ...DEFAULT_CHECKOUT_SETTINGS, ...settings }
   const { advanceCodBalance, advancePayNow } = getPaymentBreakdown(cartData, 'advance', config)
   const subtotal = cartData?.totalPrice || 0
-  const codAllowed = config.codEnabled
-    && subtotal >= config.codMinCartPaise
-    && (config.codMaxCartPaise == null || subtotal <= config.codMaxCartPaise)
+  const availableMethods = getAvailablePaymentMethods(cartData, config, rtoContext)
+  const codAllowed = availableMethods.includes('cod')
+  const onlineAllowed = availableMethods.includes('online')
+  const advanceAllowed = availableMethods.includes('advance')
   const codCharge = getCodChargeForCart(subtotal, config)
   const partialCodCharge = codCharge
+  const rtoNotice = getRtoNotice(config, rtoContext)
 
   return (
     <div className="checkout-section checkout-section--payment">
@@ -33,7 +42,11 @@ export default function PaymentMethod({ selected, onChange, cartData, settings =
         />
       </div>
 
-      {config.onlineEnabled && (
+      {rtoNotice && (
+        <div className="payment-rto-notice">{rtoNotice}</div>
+      )}
+
+      {onlineAllowed && (
         <label className="payment-option">
           <input
             type="radio"
@@ -57,7 +70,7 @@ export default function PaymentMethod({ selected, onChange, cartData, settings =
         </label>
       )}
 
-      {config.advanceEnabled && (
+      {advanceAllowed && (
         <label className="payment-option">
           <input
             type="radio"
