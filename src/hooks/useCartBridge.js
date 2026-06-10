@@ -73,7 +73,7 @@ export function useCartBridge() {
       if (received) return
       console.warn('Moon Checkout: cart data not received, using static demo cart')
       markReady(buildStaticCart(shopParam), true)
-    }, import.meta.env.DEV ? 1500 : CART_TIMEOUT_MS)
+    }, import.meta.env.DEV && !isInIframe ? 0 : (import.meta.env.DEV ? 1500 : CART_TIMEOUT_MS))
 
     return () => {
       window.removeEventListener('message', handleMessage)

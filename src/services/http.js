@@ -1,7 +1,11 @@
 import axios from 'axios'
 
-// Use VITE_BACKEND_URL when set (backend tunnel URL). Leave empty to use Vite proxy in dev.
-const BASE = import.meta.env.VITE_BACKEND_URL || ''
+const DEFAULT_BACKEND_URL = 'https://moon-checkout-backend.vercel.app'
+
+// Dev: leave unset to use Vite proxy (/api → localhost:3000). Prod: talk to deployed backend.
+const BASE =
+  import.meta.env.VITE_BACKEND_URL ||
+  (import.meta.env.DEV ? '' : DEFAULT_BACKEND_URL)
 
 const http = axios.create({
   baseURL: BASE,

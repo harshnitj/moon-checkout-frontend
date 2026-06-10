@@ -2,12 +2,13 @@ import { useEffect } from 'react'
 
 export default function Toast({ toast, onDismiss, durationMs = 4500 }) {
   const message = toast?.message
+  const autoDismissMs = toast?.durationMs ?? durationMs
 
   useEffect(() => {
     if (!message) return undefined
-    const timer = setTimeout(onDismiss, durationMs)
+    const timer = setTimeout(onDismiss, autoDismissMs)
     return () => clearTimeout(timer)
-  }, [message, onDismiss, durationMs])
+  }, [message, onDismiss, autoDismissMs])
 
   if (!message) return null
 

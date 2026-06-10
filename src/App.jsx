@@ -440,33 +440,57 @@ export default function App() {
   useEffect(() => {
     if (!cartData) return
 
-    if (paymentMethod === 'online' && onlineDiscount > 0) {
+    if (
+      paymentMethod === 'online'
+      && onlineDiscount > 0
+      && effectiveCheckoutSettings.onlineToastEnabled !== false
+    ) {
       setToast({
         variant: 'gift',
         message: `Prepaid discount of ${formatPrice(onlineDiscount)} applied to your order!`,
+        durationMs: 1000,
       })
       return
     }
 
-    if (paymentMethod === 'advance' && advanceDiscount > 0) {
+    if (
+      paymentMethod === 'advance'
+      && advanceDiscount > 0
+      && effectiveCheckoutSettings.advanceToastEnabled !== false
+    ) {
       setToast({
         variant: 'gift',
         message: `Partial COD discount of ${formatPrice(advanceDiscount)} applied to your order!`,
+        durationMs: 1000,
       })
       return
     }
 
     const isCodPayment = paymentMethod === 'cod' || paymentMethod === 'advance'
-    if (isCodPayment && codCharge > 0) {
+    if (
+      isCodPayment
+      && codCharge > 0
+      && effectiveCheckoutSettings.codToastEnabled !== false
+    ) {
       setToast({
         variant: 'warning',
         message: `COD charge of ${formatPrice(codCharge)} has been applied to your order`,
+        durationMs: 2000,
       })
       return
     }
 
     setToast(null)
-  }, [paymentMethod, codCharge, onlineDiscount, advanceDiscount, cartData])
+  }, [
+    paymentMethod,
+    codCharge,
+    onlineDiscount,
+    advanceDiscount,
+    cartData,
+    effectiveCheckoutSettings.codToastEnabled,
+    effectiveCheckoutSettings.onlineToastEnabled,
+    effectiveCheckoutSettings.advanceToastEnabled,
+  ])
 
 
 
@@ -487,7 +511,7 @@ export default function App() {
         razorpaySignature: response.razorpay_signature,
       })
 
-      setLoadingMessage('Creating your order...')
+      setLoadingMessage('Preparing order...')
       const marketing = buildOrderMarketingPayload()
       const { customer, shippingAddress } = buildOrderContext()
       const result = await createOrder({
@@ -534,11 +558,16 @@ export default function App() {
       setLoading(false)
       setLoadingMessage('')
 
+      const storeName =
+        resolveShopBranding(cartData, shopBranding).shopName ||
+        (shop ? shop.replace('.myshopify.com', '') : null) ||
+        'Store'
+
       const options = {
         key: rzpOrder.keyId || razorpayKeyId,
         amount,
         currency: 'INR',
-        name: 'Moon Checkout',
+        name: storeName,
         description,
         order_id: rzpOrder.id,
         prefill: { name: delivery.name, email, contact: phone },
@@ -581,7 +610,7 @@ export default function App() {
     try {
       if (paymentMethod === 'cod') {
         setLoading(true)
-        setLoadingMessage('Creating your order...')
+        setLoadingMessage('Preparing order...')
         const marketing = buildOrderMarketingPayload()
         const result = await createOrder({
           shop,
@@ -714,9 +743,9 @@ export default function App() {
     <>
       {loading && (
         <Loader
-          message={loadingMessage || 'Placing your order...'}
+          message={loadingMessage || 'Preparing order...'}
           submessage={
-            loadingMessage.includes('Verifying') || loadingMessage.includes('Creating')
+            loadingMessage.includes('Verifying') || loadingMessage.includes('Preparing order')
               ? "Please don't close this window while we confirm your order."
               : undefined
           }

@@ -865,12 +865,13 @@
 }
 
 .checkout-header__logo-img {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
+  width: auto;
+  height: 32px;
+  max-width: 160px;
+  border-radius: 0;
   object-fit: contain;
   flex-shrink: 0;
-  background: #f8fafc;
+  background: transparent;
 }
 
 .checkout-header__title {

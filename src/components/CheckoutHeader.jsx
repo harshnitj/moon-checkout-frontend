@@ -1,4 +1,5 @@
 import React from 'react'
+import { MOON_LOGO_SRC } from '../constants/brand'
 
 function BackArrowIcon() {
   return (
@@ -10,19 +11,6 @@ function BackArrowIcon() {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-    </svg>
-  )
-}
-
-function FallbackBrandLogo() {
-  return (
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-      <circle cx="14" cy="14" r="14" fill="#f1f5f9" />
-      <rect x="7.5" y="9" width="2" height="10" rx="1" fill="#2563eb" />
-      <rect x="10.5" y="7" width="2" height="14" rx="1" fill="#7c3aed" />
-      <rect x="13.5" y="10" width="2" height="8" rx="1" fill="#059669" />
-      <rect x="16.5" y="8" width="2" height="12" rx="1" fill="#d97706" />
-      <rect x="19.5" y="11" width="2" height="6" rx="1" fill="#dc2626" />
     </svg>
   )
 }
@@ -51,16 +39,11 @@ export default function CheckoutHeader({
         ) : null}
 
         <div className="checkout-header__brand">
-          {shopLogoUrl ? (
-            <img
-              src={shopLogoUrl}
-              alt=""
-              className="checkout-header__logo-img"
-            />
-          ) : (
-            <FallbackBrandLogo />
-          )}
-          <span className="checkout-header__title">{displayName}</span>
+          <img
+            src={shopLogoUrl || MOON_LOGO_SRC}
+            alt={displayName}
+            className={`checkout-header__logo-img${shopLogoUrl ? '' : ' checkout-header__logo-img--moon'}`}
+          />
         </div>
       </div>
 
