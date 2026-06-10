@@ -429,6 +429,14 @@ export default function App() {
     )
   }
 
+  function buildOrderContext() {
+    const orderEmail = email.trim() || `${phone}@moon-checkout.local`
+    return {
+      customer: { name: delivery.name, phone, email: orderEmail },
+      shippingAddress: buildShippingAddress(delivery, checkoutSettings),
+    }
+  }
+
   useEffect(() => {
     if (!cartData) return
 
@@ -481,6 +489,7 @@ export default function App() {
 
       setLoadingMessage('Creating your order...')
       const marketing = buildOrderMarketingPayload()
+      const { customer, shippingAddress } = buildOrderContext()
       const result = await createOrder({
         shop,
         cartData,
@@ -567,9 +576,7 @@ export default function App() {
 
     setOrderError('')
 
-    const orderEmail = email.trim() || `${phone}@moon-checkout.local`
-    const customer = { name: delivery.name, phone, email: orderEmail }
-    const shippingAddress = buildShippingAddress(delivery, checkoutSettings)
+    const { customer, shippingAddress } = buildOrderContext()
 
     try {
       if (paymentMethod === 'cod') {
