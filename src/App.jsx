@@ -46,6 +46,7 @@ import {
   sendFunnelEvent,
   isPhoneCaptured,
   isAddressCaptured,
+  isContactStepComplete,
 } from './utils/funnelTracking'
 
 
@@ -252,13 +253,16 @@ export default function App() {
   useEffect(() => {
     if (!shop || !cartData || orderSuccess) return
     if (isThreeStep && currentStep < 3) return
+    const formValues = { email, phone, delivery }
+    if (!isContactStepComplete(formValues, effectiveCheckoutSettings)) return
+    if (!isAddressCaptured(formValues, effectiveCheckoutSettings)) return
     void sendFunnelEvent({
       shop,
       event: 'payment_viewed',
       checkoutVariant: effectiveCheckoutSettings.checkoutVariant,
       lastStep: currentStep,
       cartData,
-      formValues: { email, phone, delivery },
+      formValues,
       paymentMethod,
     })
   }, [
@@ -267,7 +271,10 @@ export default function App() {
     currentStep,
     isThreeStep,
     orderSuccess,
-    effectiveCheckoutSettings.checkoutVariant,
+    effectiveCheckoutSettings,
+    email,
+    phone,
+    delivery,
     paymentMethod,
   ])
 
